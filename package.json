@@ -1,0 +1,31 @@
+{
+  "name": "wallet",
+  "version": "1.0.0",
+  "description": "{\r     \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InZpc2hha2hhYmFuc2FsQGdtYWlsLmNvbSIsImlhdCI6MTY3NjAzNTY4NCwiZXhwIjoxNjc2MDQyODg0fQ.vUblteqzD-7TxscIGLrF42Nq6qMEkf581N32jqdUWsE\"\r }",
+  "main": "index.js",
+  "type": "module",
+  
+  
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^4.1.1",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "hardhat": "^2.12.7",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^6.9.1",
+    "njwt": "^0.4.0",
+    "nodemailer": "^6.9.1",
+    "web3": "^1.8.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
