@@ -1,11 +1,10 @@
 import dotenv from 'dotenv/config';
 import nodemailer from 'nodemailer';
 
-
 const transporter = nodemailer.createTransport({
 	service: 'gmail',
 	auth: {
-		user: 'bansalvishakha64@gmail.com',
+		user: 'bansalvishakha64@gmail.com', //server email id
 		pass: 'sxrzkfogxqafhpzk'
 	}
 });
@@ -21,8 +20,21 @@ function sendConfirmationEmail(name, email, user_id){
 		  <a href=http://localhost:8080/verifyEmail/${user_id}> Click here</a>
 		  </div>`,
 	}).catch(err => console.log(err));
-  };
- 
-  export {sendConfirmationEmail};
+};
+
+export {sendConfirmationEmail};
+
+function sendTransactionEmail(name, email, amount, txnStatus){
+	transporter.sendMail({
+	  from: 'bansalvishakha64@gmail.com',
+	  to: email,
+	  subject: "Transaction details",
+	  html: `<h2>Hello! ${name}</h2>
+		  <p>You have sent ${amount} tokens. Your transaction is ${txnStatus}.</p>
+		  </div>`,
+	}).catch(err => console.log(err));
+};
+
+export {sendTransactionEmail};
 
 

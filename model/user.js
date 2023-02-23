@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
   address: { type: String},
   private_key: {type: JSON},
   token: { type: String },
-  status: {type: String, enum: ['Pending', 'Active'], default: 'Pending'}
+  status: {type: String, enum: ['Pending', 'Active'], default: 'Pending'},
+  role: {type: String, enum: ['User', 'Admin'], default: 'User'}
 });
 
 export const User = mongoose.model("User", userSchema);

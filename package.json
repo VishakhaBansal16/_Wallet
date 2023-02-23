@@ -4,8 +4,6 @@
   "description": "{\r     \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InZpc2hha2hhYmFuc2FsQGdtYWlsLmNvbSIsImlhdCI6MTY3NjAzNTY4NCwiZXhwIjoxNjc2MDQyODg0fQ.vUblteqzD-7TxscIGLrF42Nq6qMEkf581N32jqdUWsE\"\r }",
   "main": "index.js",
   "type": "module",
-  
-  
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
@@ -15,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.0",
+    "bcryptjs": "^2.4.3",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",

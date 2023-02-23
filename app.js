@@ -1,31 +1,32 @@
 import dotenv from 'dotenv/config';
 import {User} from './model/user.js';
+import {Transaction} from './model/transaction.js';
 import {db} from './config/database.js';
-import express from 'express'; 
 import mongoose from 'mongoose';
 import http from 'http';
+import express from 'express'; 
+import bcrypt from 'bcryptjs';
 export const app = express();
 import jwt from 'jsonwebtoken';
 import {verifyToken} from './middleware/auth.js';
-import {Transaction} from './model/transaction.js';
 import Accounts from 'web3-eth-accounts';
 import Web3 from 'web3';
 import nodemailer from 'nodemailer';
 import {sendConfirmationEmail} from './nodemailer.js';
-
-// calling express.json() method for parsing incoming requests with JSON payloads 
-// and this method only looks at the requests where the content-type header matches the type option
-app.use(express.json());
+import {init} from './scripts.js';
 const accounts = new Accounts('ws://localhost:8080');
-       const web3 = new Web3();
+app.use(express.json());
+import {sendTransactionEmail} from './nodemailer.js';
+
 // User Registration route
 app.post("/register", async (req, res) => {
     try {
-        // Get user input
-        const { first_name, last_name, email, password} = req.body;
+        
+      // Get user input
+        const { first_name, last_name, email, password, role} = req.body;
     
         // Validate user input
-        if (!(email && password && first_name && last_name)) {
+        if (!(email && password && first_name && last_name && role)) {
           res.status(400).send("All input is required");
         }
 
@@ -34,26 +35,25 @@ app.post("/register", async (req, res) => {
        if (oldUser) {
           return res.status(409).send("User Already Exist. Please Login");
        }
-
        
-       const a = web3.eth.accounts.create();
-       //console.log(`Private Key: \n${a.privateKey}`)
-       //console.log(`Address: \n${a.address}`)
-      
+       const encryptedPassword = await bcrypt.hash(password, 10);
+       
+       const web3 = new Web3();
+       const a = web3.eth.accounts.create(); //returns address and private key
+       
         const encryptedData = web3.eth.accounts.encrypt(a.privateKey, process.env.secretkey);
         
         // Create user in our database
         const user = await User.create({
           first_name,
           last_name,
-          email: email.toLowerCase(), //convert email to lowercase
-          password,
+          email: email.toLowerCase(),
+          password: encryptedPassword,
           address: a.address, 
-          private_key: encryptedData
+          private_key: encryptedData,
+          role
         });
         
-
-      
         // Create token
         const token = jwt.sign(
           { user_id: user._id, email },
@@ -81,7 +81,6 @@ app.post("/register", async (req, res) => {
 
 // Email Verification route
 app.get("/verifyEmail/:id", async (req, res) => {
-  console.log(req.params.id);
   await User.updateOne( { _id: req.params.id }, { $set: { status: "Active" } } );
   res.send("Email has been verified successfully");
 });
@@ -101,14 +100,11 @@ app.post("/login", async (req, res) => {
         const user = await User.findOne({ email });
         
        //validate if user email is verified 
-       // if (user.status != "Active") {
-        //  return res.status(401).send("Please verify your email!");
-       // }
+        if (user.status != "Active") {
+           return res.status(401).send("Please verify your email!");
+        }
 
-       const decryptedData = accounts.decrypt(user.private_key, process.env.secretKey);
-        console.log(decryptedData.privateKey);
-    
-        if (user.email === email && user.password===password) {
+        if (user.email === email && (bcrypt.compare(password, user.password))) {
           
           // Create token
           const token = jwt.sign(
@@ -124,7 +120,6 @@ app.post("/login", async (req, res) => {
     
           // user
           res.status(201).json(user);
-      
         }
         else{
           res.status(400).send("Invalid Credentials");
@@ -138,33 +133,71 @@ app.post("/welcome", verifyToken, (req, res) => {
   res.status(200).send("Welcome");
 });
 
-app.post("/pay", async (req, res) => {
+//Transaction Route
+app.post("/transaction", async (req, res) => {
   try{
      //Get user input
-     const {name, email, amount} = req.body;
-     if(!(name && email && amount)){
+     const {email, to, amount} = req.body;
+     if(!(email, to, amount)){
        res.status(400).send("All input is required");
      }
-
-     //const user_Id = await User.findbyId({_id});
-     const user_Id=await User.findOne({email});
+     const user=await User.findOne({email});
+     const decryptedData = accounts.decrypt(user.private_key, process.env.secretKey);
+     const Receipt = await init(user.address, decryptedData.privateKey, to, amount);
+     console.log(Receipt);
+     var txnStatus = "";
+     if(Receipt.status){
+      txnStatus = 'successful';
+     }
+     else{
+       txnStatus = 'failed';
+     }
+     
+     //Create txn in database
      const txn = await Transaction.create({
-      userId: user_Id._id,
-      name,
+      userId: user._id,
       email,
-      amount,
+      address: user._address,
+      transactionHash: Receipt.transactionHash,     
+      transactionStatus: txnStatus
     });
+   
     res.status(201).json(txn);
+    
+    sendTransactionEmail(
+      user.first_name,
+      txn.email,
+      amount,
+      txn.transactionStatus
+    );
+  
   }catch (err) {
         console.log(err);
       }
 });
 
+//Transaction details route
+app.post("/transactionDetails", async (req, res) => {
+  
+  // Get user input
+  const { email} = req.body;
+ 
+  const user = await User.findOne({email});
+  try{ 
+    //transactions from user view
+    if(user.role === 'User'){
+     const userTransactions = await Transaction.find({userId: user._id});
+     res.status(201).json(userTransactions);
+    }
+    //transactions from admin view
+    if(user.role === 'Admin'){
+     const allTransactions = await Transaction.find();
+     res.status(201).json(allTransactions);
+    }
+  }catch (err) {
+    console.log(err);
+   }
+});
 
 
-/*Save the token you get in localStorage after you do a post request on "/login"
 
-Then while making a request on an api which requires authentication, do
-axios.get(url, {headers: {"Authorization": <tokenSavedInLocalStorage> }})
-
-Then in backend, you can get the token by using "req.header('Authorization')"*/
