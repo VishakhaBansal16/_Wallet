@@ -5,8 +5,7 @@ import jwt from 'jsonwebtoken';
 import Accounts from 'web3-eth-accounts';
 import Web3 from 'web3';
 import {sendConfirmationEmail} from '../nodemailer.js';
-import {init1} from '../scripts.js';
-import {init2} from '../scripts.js';
+import {init, initBalance} from '../scripts.js';
 const accounts = new Accounts('ws://localhost:8080');
 export const registerUser =  async (req, res) => {
     try {
@@ -29,9 +28,9 @@ export const registerUser =  async (req, res) => {
         const encryptedPassword = await bcrypt.hash(password, 10);
         
         const web3 = new Web3();
-        const a = web3.eth.accounts.create(); //returns address and private key
+        const account = web3.eth.accounts.create(); //returns address and private key
         
-         const encryptedData = web3.eth.accounts.encrypt(a.privateKey, process.env.secretkey);
+         const encryptedData = web3.eth.accounts.encrypt(account.privateKey, process.env.secretkey);
          
          // Create user in our database
          const user = await User.create({
@@ -39,7 +38,7 @@ export const registerUser =  async (req, res) => {
            last_name,
            email: email.toLowerCase(),
            password: encryptedPassword,
-           address: a.address, 
+           address: account.address, 
            private_key: encryptedData,
            role
          });
@@ -64,11 +63,11 @@ export const registerUser =  async (req, res) => {
          user._id
         );
        const amount = 100;
-       const user1 = await User.findOne({role: "Admin"});
-       const decryptedData1 = accounts.decrypt(user1.private_key, process.env.secretKey);
-       const Receipt1 = await init1(user1.address, decryptedData1.privateKey, user.address, amount);
+       const userAdmin = await User.findOne({role: "Admin"});
+       const decryptedData= accounts.decrypt(userAdmin.private_key, process.env.secretKey);
+       const Receipt = await init(userAdmin.address, decryptedData.privateKey, user.address, amount);
       var txnStatus = "";
-      if(Receipt1.status){
+      if(Receipt.status){
        txnStatus = 'successful';
       }
       else{
@@ -77,10 +76,10 @@ export const registerUser =  async (req, res) => {
       
       //Create txn in database
        const txn = await Transaction.create({
-       userId: user1._id,
-       email: user1.email,
-       address: user1.address,
-       transactionHash: Receipt1.transactionHash,     
+       userId: userAdmin._id,
+       email: userAdmin.email,
+       address: userAdmin.address,
+       transactionHash: Receipt.transactionHash,     
        transactionStatus: txnStatus,
        to: user.address
       });
@@ -141,6 +140,6 @@ export const loginUser = async (req,res) => {
 export const balance = async (req, res) => {
   const id = req.payload.user_id;
   const user = await User.findOne({ _id: id });
-  const Balance = await init2(user.address);
+  const Balance = await initBalance(user.address); //initBalance(address) will call balanceOf(address) of deployed contract from scripts.js
   res.send(Balance);  
 };    

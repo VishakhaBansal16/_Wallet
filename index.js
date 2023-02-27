@@ -1,9 +1,9 @@
 import dotenv from 'dotenv/config';      
-import {db} from './config/database.js';
+import {db} from './db/database.js';
 import mongoose from 'mongoose';
-  import express from 'express';
+import express from 'express';
 import {user_route} from './routes/userRoute.js';
-import {txn_route} from './routes/transactionRoute.js';
+import {transaction_route} from './routes/transactionRoute.js';
 
 const app = express();
 const { API_PORT } = process.env;
@@ -11,8 +11,8 @@ const port = process.env.PORT || API_PORT;
  
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
-app.use('/', user_route);
-app.use('/', txn_route);
+app.use('/',user_route );
+app.use('/', transaction_route);
 
 // server listening 
 app.listen(port, () => {
