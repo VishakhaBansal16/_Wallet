@@ -17,4 +17,4 @@ const { MONGO_URI } = process.env;
         console.error(error);
         process.exit(1);
       });
-      export const db = mongoose.connection;
+export const db = mongoose.connection;
