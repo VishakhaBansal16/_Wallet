@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
+  user_id: {type: String},
   first_name: { type: String, default: null },
   last_name: { type: String, default: null },
   email: { type: String, unique: true },// email should be unique

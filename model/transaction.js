@@ -6,7 +6,8 @@ const transactionSchema =new mongoose.Schema(
     email: {type: String, required: [true, "email is required"], trim: true},
     transactionHash: {type: String},
     transactionStatus: {type: String, enum: ["successful", "failed", "pending"], default: "pending"},
-    address: {type: String}
+    address: {type: String},
+    to: {type: String}
   },
   {
     timestamps: true,

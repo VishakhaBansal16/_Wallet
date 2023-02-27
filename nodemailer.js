@@ -24,13 +24,13 @@ function sendConfirmationEmail(name, email, user_id){
 
 export {sendConfirmationEmail};
 
-function sendTransactionEmail(name, email, amount, txnStatus){
+function sendTransactionEmail(name, email, amount, to,  txnStatus){
 	transporter.sendMail({
 	  from: 'bansalvishakha64@gmail.com',
 	  to: email,
 	  subject: "Transaction details",
 	  html: `<h2>Hello! ${name}</h2>
-		  <p>You have sent ${amount} tokens. Your transaction is ${txnStatus}.</p>
+		  <p>You have sent ${amount} tokens to ${to}. Your transaction is ${txnStatus}.</p>
 		  </div>`,
 	}).catch(err => console.log(err));
 };

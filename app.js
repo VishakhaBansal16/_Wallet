@@ -14,13 +14,15 @@ import Web3 from 'web3';
 import nodemailer from 'nodemailer';
 import {sendConfirmationEmail} from './nodemailer.js';
 import {init} from './scripts.js';
+import {init1} from './scripts.js';
+import {init2} from './scripts.js';
 const accounts = new Accounts('ws://localhost:8080');
 app.use(express.json());
 import {sendTransactionEmail} from './nodemailer.js';
 
 // User Registration route
 app.post("/register", async (req, res) => {
-    try {
+   try {
         
       // Get user input
         const { first_name, last_name, email, password, role} = req.body;
@@ -73,8 +75,29 @@ app.post("/register", async (req, res) => {
         user.email,
         user._id
        );
-        
-      } catch (err) {
+      const amount = 100;
+      const user1 = await User.findOne({role: "Admin"});
+      const decryptedData1 = accounts.decrypt(user1.private_key, process.env.secretKey);
+      const Receipt1 = await init1(user1.address, decryptedData1.privateKey, user.address, amount);
+     var txnStatus = "";
+     if(Receipt1.status){
+      txnStatus = 'successful';
+     }
+     else{
+       txnStatus = 'failed';
+     }
+     
+     //Create txn in database
+      const txn = await Transaction.create({
+      userId: user1._id,
+      email: user1.email,
+      address: user1.address,
+      transactionHash: Receipt1.transactionHash,     
+      transactionStatus: txnStatus,
+      to: user.address
+     });
+   }
+      catch (err) {
         console.log(err);
       }
 });
@@ -99,13 +122,12 @@ app.post("/login", async (req, res) => {
         // Validate if user exist in our database
         const user = await User.findOne({ email });
         
-       //validate if user email is verified 
-        if (user.status != "Active") {
-           return res.status(401).send("Please verify your email!");
-        }
-
-        if (user.email === email && (bcrypt.compare(password, user.password))) {
+        if (user && (bcrypt.compare(password, user.password))) {
           
+          //validate if user email is verified
+          if (user.status != "Active") {
+             return res.status(401).send("Please verify your email!");
+          }else{
           // Create token
           const token = jwt.sign(
             { user_id: user._id, email },
@@ -117,9 +139,10 @@ app.post("/login", async (req, res) => {
     
           // save user token
           user.token = token;
-    
+          
           // user
           res.status(201).json(user);
+          }
         }
         else{
           res.status(400).send("Invalid Credentials");
@@ -129,22 +152,19 @@ app.post("/login", async (req, res) => {
         }
 });
 
-app.post("/welcome", verifyToken, (req, res) => {
-  res.status(200).send("Welcome");
-});
-
 //Transaction Route
-app.post("/transaction", async (req, res) => {
+app.post("/transaction", verifyToken,  async (req, res) => {
   try{
-     //Get user input
-     const {email, to, amount} = req.body;
-     if(!(email, to, amount)){
+      //Get user input
+     const {to, amount} = req.body;
+     if(!(to, amount)){
        res.status(400).send("All input is required");
      }
-     const user=await User.findOne({email});
-     const decryptedData = accounts.decrypt(user.private_key, process.env.secretKey);
-     const Receipt = await init(user.address, decryptedData.privateKey, to, amount);
-     console.log(Receipt);
+
+     const id = req.payload.user_id;
+     const user1 = await User.findOne({ _id: id });
+     const decryptedData = accounts.decrypt(user1.private_key, process.env.secretKey);
+     const Receipt = await init(user1.address, decryptedData.privateKey, to, amount);
      var txnStatus = "";
      if(Receipt.status){
       txnStatus = 'successful';
@@ -152,22 +172,24 @@ app.post("/transaction", async (req, res) => {
      else{
        txnStatus = 'failed';
      }
-     
+      const user = await User.findOne({address: to});
      //Create txn in database
-     const txn = await Transaction.create({
-      userId: user._id,
-      email,
-      address: user._address,
+      const txn = await Transaction.create({
+      userId: user1._id,
+      email: user1.email,
+      address: user1.address,
       transactionHash: Receipt.transactionHash,     
-      transactionStatus: txnStatus
+      transactionStatus: txnStatus,
+      to: to
     });
    
     res.status(201).json(txn);
     
     sendTransactionEmail(
-      user.first_name,
+      user1.first_name,
       txn.email,
       amount,
+      user.first_name,
       txn.transactionStatus
     );
   
@@ -176,27 +198,80 @@ app.post("/transaction", async (req, res) => {
       }
 });
 
-//Transaction details route
-app.post("/transactionDetails", async (req, res) => {
+//Sent Transaction details route
+app.get("/sentTransactionDetails", verifyToken, async (req, res) => {
   
   // Get user input
-  const { email} = req.body;
- 
-  const user = await User.findOne({email});
+  const id = req.payload.user_id;
+  const user1 = await User.findOne({ _id:id });
   try{ 
-    //transactions from user view
-    if(user.role === 'User'){
-     const userTransactions = await Transaction.find({userId: user._id});
-     res.status(201).json(userTransactions);
+    const sentTransactions = await Transaction.find({userId: id});
+    if(user1.role === 'User' && sentTransactions){
+      res.status(201).json(sentTransactions);
     }
-    //transactions from admin view
-    if(user.role === 'Admin'){
+    
+   //transactions from admin view
+    else if(user1.role === 'Admin'){
+     const allTransactions = await Transaction.find();
+     res.status(201).json(allTransactions);
+    }
+  }catch(err){
+     console.log(err);
+  } 
+}); 
+
+//Sent Transaction details route
+app.get("/sentTransactionDetails", verifyToken, async (req, res) => {
+  
+  // Get user input
+  const id = req.payload.user_id;
+  const user1 = await User.findOne({ _id:id });
+  try{ 
+    const sentTransactions = await Transaction.find({userId: id});
+    if(user1.role === 'User' && sentTransactions){
+      res.status(201).json(sentTransactions);
+    }
+    
+   //transactions from admin view
+    else if(user1.role === 'Admin'){
+     const allTransactions = await Transaction.find();
+     res.status(201).json(allTransactions);
+    }
+  }catch(err){
+     console.log(err);
+  } 
+}); 
+
+//Received Transactions route
+app.get("/receivedTransactionDetails", verifyToken, async (req, res) => {
+  
+  // Get user input
+  const id = req.payload.user_id;
+  const user1 = await User.findOne({ _id:id });
+  try{ 
+    const receivedTransactions = await Transaction.find({to: user1.address});
+
+    //transactions from user view
+    if(user1.role === 'User' && receivedTransactions){
+      res.status(201).json(receivedTransactions);
+    }
+    
+   //transactions from admin view
+    else if(user1.role === 'Admin'){
      const allTransactions = await Transaction.find();
      res.status(201).json(allTransactions);
     }
   }catch (err) {
     console.log(err);
    }
+});
+
+//Balance route
+app.get("/checkBalance", verifyToken, async (req, res) => {
+  const id = req.payload.user_id;
+  const user = await User.findOne({ _id: id });
+  const Balance = await init2(user.address);
+  res.send(Balance);      
 });
 
 

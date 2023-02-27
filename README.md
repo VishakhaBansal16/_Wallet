@@ -22,7 +22,7 @@ Create a Fully Working Wallet Based on Nodejs.
  * Solidity for smart contracts
  * Hardhat for deploying contract on testnet goerli
  * MongoDB for storing entries in the database
- * Postman for using these APIs(/register, /login, /verifyEmail:id, /transaction, /transactionDetails)
+ * Postman for using these APIs(/register, /login, /transaction, /sentTransactionDetails, /receivedTransactionDetails, /checkBalance)
 
 ## Install and Run 
 To run this project, you must have the following installed:
