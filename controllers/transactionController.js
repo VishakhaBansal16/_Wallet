@@ -30,6 +30,10 @@ export const transaction = async (req, res, next) => {
       to,
       amount
     );
+
+    if (!Receipt) {
+      throw createError(404, "Not Found");
+    }
     var txnStatus = "";
     if (Receipt.status) {
       txnStatus = "successful";
@@ -50,18 +54,19 @@ export const transaction = async (req, res, next) => {
     if (!txn) {
       throw createHttpError(404, "Not Found");
     }
+    const sentAmount = amount / 10 ** 18;
+    sendTransactionEmail(
+      sender.first_name,
+      txn.email,
+      sentAmount,
+      user.first_name,
+      txn.transactionStatus
+    );
+
     res.status(201).json({
       status: "success",
       txn,
     });
-
-    sendTransactionEmail(
-      sender.first_name,
-      txn.email,
-      amount,
-      user.first_name,
-      txn.transactionStatus
-    );
   } catch (err) {
     console.log(err);
     next(err);

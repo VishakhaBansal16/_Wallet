@@ -27,8 +27,9 @@ export const initMint = async (address, privateKey, amount) => {
     privateKey
   );
   const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-  console.log(`Transaction hash: ${receipt.transactionHash}`);
+
   console.log(receipt);
+  console.log(`Transaction hash: ${receipt.transactionHash}`);
   return receipt;
 };
 

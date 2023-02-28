@@ -69,23 +69,38 @@ export const registerUser = async (req, res, next) => {
       throw createError(404, "Not Found");
     }
 
-    // return new user
-    res.status(201).json({
-      status: "success",
-      user,
-    });
-
     sendConfirmationEmail(user.first_name, user.email, user._id);
 
-    const amount = 100000000000000000000n;
+    const amount = 100000000000000000000n; //100 * 10 ** 18;
     const _address = process.env.contractOwnerAddress;
     const _privateKey = process.env.contractOwnerPrivateKey;
 
     //minting 100 tokens to contractOwner
     const receipt = await initMint(_address, _privateKey, amount);
 
+    if (!receipt) {
+      throw createError(404, "Not Found");
+    }
+
     //transferring 100 tokens from contractOwner to new user
     const Receipt = await init(_address, _privateKey, user.address, amount);
+
+    if (!Receipt) {
+      throw createError(404, "Not Found");
+    }
+
+    var txnStatus = "";
+    if (Receipt.status) {
+      txnStatus = "successful";
+    } else {
+      txnStatus = "failed";
+    }
+
+    // return new user
+    res.status(201).json({
+      status: "success",
+      user,
+    });
   } catch (err) {
     console.log(err);
     next(err);
@@ -149,13 +164,14 @@ export const balance = async (req, res, next) => {
   const id = req.payload.user_id;
   try {
     const user = await User.findOne({ _id: id });
-    const Balance = await initBalance(user.address); //initBalance(address) will call balanceOf(address) of deployed contract from scripts.js
-    if (!Balance) {
+    const balance = await initBalance(user.address); //initBalance(address) will call balanceOf(address) of deployed contract from scripts.js
+    if (!balance) {
       throw createError(404, "Not Found");
     }
+    const Balance = balance / 10 ** 18;
     res.status(200).json({
       status: "success",
-      Balance,
+      balance,
     });
   } catch (err) {
     console.log(err);
