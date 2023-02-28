@@ -4,7 +4,6 @@
 - [Tasks Included](#tasks-included)
 - [Technologies Included](#technologies-included)
 - [Install and run](#install-and-run)
-- [Directories](#directories)
 - [Hardhat Setup](#hardhat-setup)
 
 ## Task Description

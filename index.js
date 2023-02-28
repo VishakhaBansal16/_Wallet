@@ -1,7 +1,4 @@
-import dotenv from "dotenv/config";
 import createError from "http-errors";
-//dotenv.config({ path: "./.env" });
-//const config = process.env;
 import { db } from "./db/database.js";
 import mongoose from "mongoose";
 import express from "express";
