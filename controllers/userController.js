@@ -1,100 +1,114 @@
-import {User} from '../model/user.js';
-import {Transaction} from '../model/transaction.js';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import Accounts from 'web3-eth-accounts';
-import Web3 from 'web3';
-import {sendConfirmationEmail} from '../nodemailer.js';
-import {init, initBalance} from '../scripts.js';
-const accounts = new Accounts('ws://localhost:8080');
-export const registerUser =  async (req, res) => {
-    try {
-      console.log(req.body);
-      
-       // Get user input
-         const { first_name, last_name, email, password, role} = req.body;
-         console.log(req.body);
-         // Validate user input
-         if (!(email && password && first_name && last_name && role)) {
-           res.status(400).send("All input is required");
-         }
- 
-         const oldUser = await User.findOne({ email });
- 
-        if (oldUser) {
-           return res.status(409).send("User Already Exist. Please Login");
-        }
-        
-        const encryptedPassword = await bcrypt.hash(password, 10);
-        
-        const web3 = new Web3();
-        const account = web3.eth.accounts.create(); //returns address and private key
-        
-         const encryptedData = web3.eth.accounts.encrypt(account.privateKey, process.env.secretkey);
-         
-         // Create user in our database
-         const user = await User.create({
-           first_name,
-           last_name,
-           email: email.toLowerCase(),
-           password: encryptedPassword,
-           address: account.address, 
-           private_key: encryptedData,
-           role
-         });
-         
-         // Create token
-         const token = jwt.sign(
-           { user_id: user._id, email },
-           process.env.TOKEN_KEY,
-           {
-             expiresIn: "2h",
-           }
-         );
-         // save user token
-         user.token = token;
-     
-         // return new user
-         res.status(201).json(user);
- 
-        sendConfirmationEmail(
-         user.first_name,
-         user.email,
-         user._id
-        );
-       const amount = 100;
-       const userAdmin = await User.findOne({role: "Admin"});
-       const decryptedData= accounts.decrypt(userAdmin.private_key, process.env.secretKey);
-       const Receipt = await init(userAdmin.address, decryptedData.privateKey, user.address, amount);
-      var txnStatus = "";
-      if(Receipt.status){
-       txnStatus = 'successful';
-      }
-      else{
-        txnStatus = 'failed';
-      }
-      
-      //Create txn in database
-       const txn = await Transaction.create({
-       userId: userAdmin._id,
-       email: userAdmin.email,
-       address: userAdmin.address,
-       transactionHash: Receipt.transactionHash,     
-       transactionStatus: txnStatus,
-       to: user.address
+import { User } from "../model/user.js";
+import { Transaction } from "../model/transaction.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import Accounts from "web3-eth-accounts";
+import Web3 from "web3";
+import { sendConfirmationEmail } from "../nodemailer.js";
+import { init, initBalance } from "../scripts.js";
+//import createError from 'http-errors';
+const accounts = new Accounts("https://goerli.infura.io/v3/73278735c19b4cd7bc5ea172332ca2f9");
+export const registerUser = async (req, res) => {
+  try {
+
+    // Get user input
+    const { first_name, last_name, email, password, role } = req.body;
+    console.log(req.body);
+    // Validate user input
+    if (!(email && password && first_name && last_name && role)) {
+      res.status(400).json({
+        status: "failed",
+        message: "All inputs are required"
       });
     }
-       catch (err) {
-         console.log(err);
-       }
- };
+
+    const oldUser = await User.findOne({ email });
+
+    if (oldUser) {
+      return res.status(409).json({
+        status: "failed",
+        message: "All inputs are required"
+      });
+    }
+
+    const encryptedPassword = await bcrypt.hash(password, 10);
+
+    const web3 = new Web3();
+    const account = web3.eth.accounts.create(); //returns address and private key
+
+    const encryptedData = web3.eth.accounts.encrypt(
+      account.privateKey,
+      process.env.secretkey
+    );
+
+    // Create user in our database
+    const user = await User.create({
+      first_name,
+      last_name,
+      email: email.toLowerCase(),
+      password: encryptedPassword,
+      address: account.address,
+      private_key: encryptedData,
+      role,
+    });
+
+    // Create token
+    const token = jwt.sign(
+      { user_id: user._id, email },
+      process.env.TOKEN_KEY,
+      {
+        expiresIn: "2h",
+      }
+    );
+    // save user token
+    user.token = token;
+
+    // return new user
+    res.status(201).json({
+      status: "success",
+      user,
+    });
+    
+    sendConfirmationEmail(user.first_name, user.email, user._id);
+    const amount = 100;
+    const userAdmin = await User.findOne({ role: "Admin" });
+    const decryptedData = accounts.decrypt(
+      userAdmin.private_key,
+      process.env.secretKey
+    );
+    const Receipt = await init(
+      userAdmin.address,
+      decryptedData.privateKey,
+      user.address,
+      amount
+    );
+    var txnStatus = "";
+    if (Receipt.status) {
+      txnStatus = "successful";
+    } else {
+      txnStatus = "failed";
+    }
+
+    //Create txn in database
+    const txn = await Transaction.create({
+      userId: userAdmin._id,
+      email: userAdmin.email,
+      address: userAdmin.address,
+      transactionHash: Receipt.transactionHash,
+      transactionStatus: txnStatus,
+      to: user.address,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export const verifyUserEmail = async (req, res) => {
-  await User.updateOne( { _id: req.params.id }, { $set: { status: "Active" } } );
+  await User.updateOne({ _id: req.params.id }, { $set: { status: "Active" } });
   res.send("Email has been verified successfully");
 };
 
-export const loginUser = async (req,res) => {
+export const loginUser = async (req, res) => {
   try {
     // Get user input
     const { email, password } = req.body;
@@ -103,43 +117,50 @@ export const loginUser = async (req,res) => {
     if (!(email && password)) {
       res.status(400).send("All input is required");
     }
-    
+
     // Validate if user exist in our database
     const user = await User.findOne({ email });
-    
-    if (user && (bcrypt.compare(password, user.password))) {
-      
+
+    if (user && bcrypt.compare(password, user.password)) {
       //validate if user email is verified
       if (user.status != "Active") {
-         return res.status(401).send("Please verify your email!");
-      }else{
-      // Create token
-      const token = jwt.sign(
-        { user_id: user._id, email },
-        process.env.TOKEN_KEY,
-        {
-          expiresIn: "2h",
-        }
-      );
+        return res.status(401).send("Please verify your email!");
+      } else {
+        // Create token
+        const token = jwt.sign(
+          { user_id: user._id, email },
+          process.env.TOKEN_KEY,
+          {
+            expiresIn: "2h",
+          }
+        );
 
-      // save user token
-      user.token = token;
-      
-      // user
-      res.status(201).json(user);
+        // save user token
+        user.token = token;
+        
+        // user
+        res.status(201).json({
+          status: "success",
+          user
+        });
       }
-    }
-    else{
+    } else {
       res.status(400).send("Invalid Credentials");
     }
   } catch (err) {
     console.log(err);
-    }
+
+
+    
+  } 
 };
 
 export const balance = async (req, res) => {
   const id = req.payload.user_id;
   const user = await User.findOne({ _id: id });
   const Balance = await initBalance(user.address); //initBalance(address) will call balanceOf(address) of deployed contract from scripts.js
-  res.send(Balance);  
-};    
+  res.status(200).json({
+    status: "success",
+    Balance
+  });
+}

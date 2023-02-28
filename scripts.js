@@ -9,7 +9,6 @@ const infuraUrl = 'https://goerli.infura.io/v3/73278735c19b4cd7bc5ea172332ca2f9'
         "0x1ff1EA0a7F55BD4bBAf2a3C35EEbE63D921FcbEc"
     );
     const tx = myContract.methods.transfer(receiver, amount);
-    //const tx = myContract.methods.mint(500).send();
     const gas = await tx.estimateGas({from: address});
     const gasPrice = await web3.eth.getGasPrice();
     const data = tx.encodeABI();
