@@ -1,3 +1,4 @@
+import dotenv from "dotenv/config";
 import { User } from "../model/user.js";
 import { Transaction } from "../model/transaction.js";
 import bcrypt from "bcryptjs";
@@ -5,7 +6,7 @@ import jwt from "jsonwebtoken";
 import Accounts from "web3-eth-accounts";
 import Web3 from "web3";
 import { sendConfirmationEmail } from "../nodemailer.js";
-import { init, initBalance } from "../scripts.js";
+import { initMint, init, initBalance } from "../scripts.js";
 import createError from "http-errors";
 const accounts = new Accounts(
   "https://goerli.infura.io/v3/73278735c19b4cd7bc5ea172332ca2f9"
@@ -75,34 +76,16 @@ export const registerUser = async (req, res, next) => {
     });
 
     sendConfirmationEmail(user.first_name, user.email, user._id);
-    const amount = 100;
-    const userAdmin = await User.findOne({ role: "Admin" });
-    const decryptedData = accounts.decrypt(
-      userAdmin.private_key,
-      process.env.secretKey
-    );
-    const Receipt = await init(
-      userAdmin.address,
-      decryptedData.privateKey,
-      user.address,
-      amount
-    );
-    var txnStatus = "";
-    if (Receipt.status) {
-      txnStatus = "successful";
-    } else {
-      txnStatus = "failed";
-    }
 
-    //Create txn in database
-    const txn = await Transaction.create({
-      userId: userAdmin._id,
-      email: userAdmin.email,
-      address: userAdmin.address,
-      transactionHash: Receipt.transactionHash,
-      transactionStatus: txnStatus,
-      to: user.address,
-    });
+    const amount = 100000000000000000000n;
+    const _address = process.env.contractOwnerAddress;
+    const _privateKey = process.env.contractOwnerPrivateKey;
+
+    //minting 100 tokens to contractOwner
+    const receipt = await initMint(_address, _privateKey, amount);
+
+    //transferring 100 tokens from contractOwner to new user
+    const Receipt = await init(_address, _privateKey, user.address, amount);
   } catch (err) {
     console.log(err);
     next(err);
