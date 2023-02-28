@@ -5,6 +5,7 @@
 - [Technologies Included](#technologies-included)
 - [Install and run](#install-and-run)
 - [Directories](#directories)
+- [Hardhat Setup](#hardhat-setup)
 
 ## Task Description
 
@@ -53,9 +54,38 @@ Run npm run dev to start the application.
 $ npm run dev
 ```
 
+## Hardhat Setup
+
+```
+npm init --yes
+```
+
+npm i @nomiclabs/hardhat-ethers
+
+```
+npm install '@nomiclabs/hardhat-etherscan'
+```
+
+npm install hardhat
+
+```
+npx hardhat compile
+```
+
+npx hardhat run
+
+```
+npx hardhat run scripts/deploy.js --network goerli
+```
+
+npx hardhat run scripts/verify.js --network goerli
+
+```
+
 ## Directories
 
 Two separate directories are created for this project.
 
 - Wallet(for backend) and code pushed in main branch
 - Contracts(for smart contracts) and code pushed in main1 branch
+```
