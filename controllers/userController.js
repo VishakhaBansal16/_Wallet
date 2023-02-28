@@ -6,11 +6,12 @@ import Accounts from "web3-eth-accounts";
 import Web3 from "web3";
 import { sendConfirmationEmail } from "../nodemailer.js";
 import { init, initBalance } from "../scripts.js";
-import createError from 'http-errors';
-const accounts = new Accounts("https://goerli.infura.io/v3/73278735c19b4cd7bc5ea172332ca2f9");
+import createError from "http-errors";
+const accounts = new Accounts(
+  "https://goerli.infura.io/v3/73278735c19b4cd7bc5ea172332ca2f9"
+);
 export const registerUser = async (req, res, next) => {
   try {
-
     // Get user input
     const { first_name, last_name, email, password, role } = req.body;
     console.log(req.body);
@@ -18,7 +19,7 @@ export const registerUser = async (req, res, next) => {
     if (!(email && password && first_name && last_name && role)) {
       res.status(400).json({
         status: "failed",
-        message: "All inputs are required"
+        message: "All inputs are required",
       });
     }
 
@@ -27,7 +28,7 @@ export const registerUser = async (req, res, next) => {
     if (oldUser) {
       return res.status(409).json({
         status: "failed",
-        message: "All inputs are required"
+        message: "All inputs are required",
       });
     }
 
@@ -62,17 +63,17 @@ export const registerUser = async (req, res, next) => {
     );
     // save user token
     user.token = token;
-     
-    if(!user){
+
+    if (!user) {
       throw createError(404, "Not Found");
     }
-    
+
     // return new user
     res.status(201).json({
       status: "success",
       user,
     });
-    
+
     sendConfirmationEmail(user.first_name, user.email, user._id);
     const amount = 100;
     const userAdmin = await User.findOne({ role: "Admin" });
@@ -142,14 +143,14 @@ export const loginUser = async (req, res, next) => {
 
         // save user token
         user.token = token;
-        
-        if(!user){
+
+        if (!user) {
           throw createError(404, "Not Found");
         }
         // user
         res.status(201).json({
           status: "success",
-          user
+          user,
         });
       }
     } else {
@@ -158,26 +159,23 @@ export const loginUser = async (req, res, next) => {
   } catch (err) {
     console.log(err);
     next(err);
-
-
-    
-  } 
+  }
 };
 
 export const balance = async (req, res, next) => {
   const id = req.payload.user_id;
-  try{
-  const user = await User.findOne({ _id: id });
-  const Balance = await initBalance(user.address); //initBalance(address) will call balanceOf(address) of deployed contract from scripts.js
-  if(!Balance){
-    throw createError(404, "Not Found");
-  }
-  res.status(200).json({
-    status: "success",
-    Balance
-  });
-  }catch(err){
+  try {
+    const user = await User.findOne({ _id: id });
+    const Balance = await initBalance(user.address); //initBalance(address) will call balanceOf(address) of deployed contract from scripts.js
+    if (!Balance) {
+      throw createError(404, "Not Found");
+    }
+    res.status(200).json({
+      status: "success",
+      Balance,
+    });
+  } catch (err) {
     console.log(err);
     next(err);
   }
-}
+};

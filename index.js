@@ -27,11 +27,11 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.status(404).json({
     status: "failed",
-    message: "Page not found"
+    message: "Page not found",
   });
   res.status(500).json({
     status: "failed",
-    message: "Internal server error"
+    message: "Internal server error",
   });
 });
 

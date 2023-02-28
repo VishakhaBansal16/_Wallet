@@ -15,7 +15,7 @@ export const transaction = async (req, res, next) => {
     if (!(to, amount)) {
       res.status(400).json({
         status: "failed",
-        message: "All inputs are required"
+        message: "All inputs are required",
       });
     }
     const id = req.payload.user_id;
@@ -47,12 +47,12 @@ export const transaction = async (req, res, next) => {
       to: to,
     });
 
-     if(!txn){
+    if (!txn) {
       throw createHttpError(404, "Not Found");
-     }
+    }
     res.status(201).json({
       status: "success",
-      txn
+      txn,
     });
 
     sendTransactionEmail(
@@ -75,27 +75,27 @@ export const sentTransactionDetails = async (req, res, next) => {
   try {
     const sentTransactions = await Transaction.find({ userId: id });
     if (user.role === "User" && sentTransactions) {
-      if(!sentTransactions){
+      if (!sentTransactions) {
         throw createHttpError(404, "Not Found");
       }
 
       res.status(201).json({
         status: "success",
-        sentTransactions
+        sentTransactions,
       });
     }
     //transactions from admin view
     if (user.role === "Admin") {
       const allTransactions = await Transaction.find();
-      if(!allTransactions){
+      if (!allTransactions) {
         throw createHttpError(404, "Not Found");
       }
       res.status(201).json({
         status: "success",
-        allTransactions
+        allTransactions,
       });
     }
-  }catch(err) {
+  } catch (err) {
     console.log(err);
     next(err);
   }
@@ -107,26 +107,26 @@ export const receivedTransactionDetails = async (req, res, next) => {
   const user = await User.findOne({ _id: id });
   try {
     const receivedTransactions = await Transaction.find({ to: user.address });
-    if(!receivedTransactions){
+    if (!receivedTransactions) {
       throw createHttpError(404, "Not Found");
     }
     //transactions from user view
     if (user.role === "User" && receivedTransactions) {
       res.status(201).json({
         status: "success",
-        receivedTransactions
+        receivedTransactions,
       });
     }
 
     //transactions from admin view
     if (user.role === "Admin") {
       const allTransactions = await Transaction.find();
-      if(!allTransactions){
+      if (!allTransactions) {
         throw createHttpError(404, "Not Found");
       }
       res.status(201).json({
         status: "success",
-        allTransactions
+        allTransactions,
       });
     }
   } catch (err) {
