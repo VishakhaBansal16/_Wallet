@@ -1,3 +1,4 @@
+import dotenv from "dotenv/config";
 import createError from "http-errors";
 import { db } from "./db/database.js";
 import mongoose from "mongoose";
