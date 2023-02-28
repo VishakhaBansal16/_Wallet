@@ -42,12 +42,6 @@ Run npm install to install required dependencies.
 $ npm install
 ```
 
-Run npx hardhat compile to compile contracts.
-
-```
-$ npx hardhat compile
-```
-
 Run npm run dev to start the application.
 
 ```
@@ -56,36 +50,44 @@ $ npm run dev
 
 ## Hardhat Setup
 
+Run npm install hardhat to install hardhat.
+
 ```
-npm init --yes
+npm install hardhat
 ```
 
-npm i @nomiclabs/hardhat-ethers
+Run npm install '@nomiclabs/hardhat-etherscan' to install hardhat plugin for verifying contracts on etherscan.
 
 ```
 npm install '@nomiclabs/hardhat-etherscan'
 ```
 
-npm install hardhat
+Run npm i @nomiclabs/hardhat-ethers to install plugin which brings Hardhat the Ethereum library ethers.js, which allows to interact with the Ethereum blockchain
+
+```
+Run npm i @nomiclabs/hardhat-ethers
+```
+
+Run npx hardhat compile to compile all contracts.
 
 ```
 npx hardhat compile
 ```
 
-npx hardhat run
+Run npx hardhat run to run the hardhat in application.
+
+```
+npx hardhat compile
+```
+
+Run npx hardhat run scripts/deploy.js --network goerli to deploy contract on network goerli.
 
 ```
 npx hardhat run scripts/deploy.js --network goerli
 ```
 
-npx hardhat run scripts/verify.js --network goerli
+Run npx hardhat run scripts/verify.js --network goerli to verify the deployed contract on netwrok goerli.
 
 ```
-
-## Directories
-
-Two separate directories are created for this project.
-
-- Wallet(for backend) and code pushed in main branch
-- Contracts(for smart contracts) and code pushed in main1 branch
+npx hardhat run scripts/verify.js --network goerli
 ```
