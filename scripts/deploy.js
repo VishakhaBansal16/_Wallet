@@ -1,5 +1,4 @@
 require("@nomiclabs/hardhat-ethers");
-//const {ethers} = require("hardhat");
 async function main() {
   const ContractInstance = await ethers.getContractFactory("ERC20");
   const contractInstance = await ContractInstance.deploy(
