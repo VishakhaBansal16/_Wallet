@@ -8,7 +8,7 @@ const accounts = new Accounts(
   "https://goerli.infura.io/v3/73278735c19b4cd7bc5ea172332ca2f9"
 );
 
-export const transaction = async (req, res) => {
+export const transaction = async (req, res, next) => {
   try {
     //Get user input
     const { to, amount } = req.body;
@@ -47,6 +47,9 @@ export const transaction = async (req, res) => {
       to: to,
     });
 
+     if(!txn){
+      throw createHttpError(404, "Not Found");
+     }
     res.status(201).json({
       status: "success",
       txn
@@ -61,16 +64,21 @@ export const transaction = async (req, res) => {
     );
   } catch (err) {
     console.log(err);
+    next(err);
   }
 };
 
-export const sentTransactionDetails = async (req, res) => {
+export const sentTransactionDetails = async (req, res, next) => {
   // Get user input
   const id = req.payload.user_id;
   const user = await User.findOne({ _id: id });
   try {
     const sentTransactions = await Transaction.find({ userId: id });
     if (user.role === "User" && sentTransactions) {
+      if(!sentTransactions){
+        throw createHttpError(404, "Not Found");
+      }
+
       res.status(201).json({
         status: "success",
         sentTransactions
@@ -79,6 +87,9 @@ export const sentTransactionDetails = async (req, res) => {
     //transactions from admin view
     if (user.role === "Admin") {
       const allTransactions = await Transaction.find();
+      if(!allTransactions){
+        throw createHttpError(404, "Not Found");
+      }
       res.status(201).json({
         status: "success",
         allTransactions
@@ -86,16 +97,19 @@ export const sentTransactionDetails = async (req, res) => {
     }
   }catch(err) {
     console.log(err);
+    next(err);
   }
 };
 
-export const receivedTransactionDetails = async (req, res) => {
+export const receivedTransactionDetails = async (req, res, next) => {
   // Get user input
   const id = req.payload.user_id;
   const user = await User.findOne({ _id: id });
   try {
     const receivedTransactions = await Transaction.find({ to: user.address });
-
+    if(!receivedTransactions){
+      throw createHttpError(404, "Not Found");
+    }
     //transactions from user view
     if (user.role === "User" && receivedTransactions) {
       res.status(201).json({
@@ -107,6 +121,9 @@ export const receivedTransactionDetails = async (req, res) => {
     //transactions from admin view
     if (user.role === "Admin") {
       const allTransactions = await Transaction.find();
+      if(!allTransactions){
+        throw createHttpError(404, "Not Found");
+      }
       res.status(201).json({
         status: "success",
         allTransactions
@@ -114,5 +131,6 @@ export const receivedTransactionDetails = async (req, res) => {
     }
   } catch (err) {
     console.log(err);
+    next(err);
   }
 };

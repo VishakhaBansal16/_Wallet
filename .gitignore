@@ -1,3 +1,8 @@
 node_modules
 .env
 ABI.js
+artifacts/
+cache/
+.vscode
+
+

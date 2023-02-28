@@ -6,9 +6,9 @@ import Accounts from "web3-eth-accounts";
 import Web3 from "web3";
 import { sendConfirmationEmail } from "../nodemailer.js";
 import { init, initBalance } from "../scripts.js";
-//import createError from 'http-errors';
+import createError from 'http-errors';
 const accounts = new Accounts("https://goerli.infura.io/v3/73278735c19b4cd7bc5ea172332ca2f9");
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
 
     // Get user input
@@ -62,7 +62,11 @@ export const registerUser = async (req, res) => {
     );
     // save user token
     user.token = token;
-
+     
+    if(!user){
+      throw createError(404, "Not Found");
+    }
+    
     // return new user
     res.status(201).json({
       status: "success",
@@ -100,6 +104,7 @@ export const registerUser = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
+    next(err);
   }
 };
 
@@ -108,7 +113,7 @@ export const verifyUserEmail = async (req, res) => {
   res.send("Email has been verified successfully");
 };
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
   try {
     // Get user input
     const { email, password } = req.body;
@@ -138,6 +143,9 @@ export const loginUser = async (req, res) => {
         // save user token
         user.token = token;
         
+        if(!user){
+          throw createError(404, "Not Found");
+        }
         // user
         res.status(201).json({
           status: "success",
@@ -149,18 +157,27 @@ export const loginUser = async (req, res) => {
     }
   } catch (err) {
     console.log(err);
+    next(err);
 
 
     
   } 
 };
 
-export const balance = async (req, res) => {
+export const balance = async (req, res, next) => {
   const id = req.payload.user_id;
+  try{
   const user = await User.findOne({ _id: id });
   const Balance = await initBalance(user.address); //initBalance(address) will call balanceOf(address) of deployed contract from scripts.js
+  if(!Balance){
+    throw createError(404, "Not Found");
+  }
   res.status(200).json({
     status: "success",
     Balance
   });
+  }catch(err){
+    console.log(err);
+    next(err);
+  }
 }
