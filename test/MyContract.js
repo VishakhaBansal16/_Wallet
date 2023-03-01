@@ -82,4 +82,14 @@ describe("MyContract", function () {
       hardhatToken.connect(owner).transfer(addr3.address, 50)
     ).to.changeTokenBalances(hardhatToken, [owner, addr3], [-50, 50]);
   });
+
+  it("Should not allow non-owners to mint tokens", async function () {
+    const { hardhatToken, addr1 } = await loadFixture(deployTokenFixture);
+    await expect(hardhatToken.connect(addr1).mint(100)).to.be.reverted;
+  });
+
+  it("Should not allow non-owners to burn tokens", async function () {
+    const { hardhatToken, addr1 } = await loadFixture(deployTokenFixture);
+    await expect(hardhatToken.connect(addr1).burn(100)).to.be.reverted;
+  });
 });
