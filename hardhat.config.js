@@ -1,3 +1,4 @@
+import dotenv from "dotenv/config";
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-ethers");
 require("@nomicfoundation/hardhat-chai-matchers");
@@ -7,9 +8,7 @@ module.exports = {
     hardhat: {},
     goerli: {
       url: "https://eth-goerli.g.alchemy.com/v2/NGUbihVC3VtItjB-XcwQabWeuBZUfcnR",
-      accounts: [
-        "52f2046c2002f0bd00adcebfc8cd45dcddd933eb47e9df34f2ec81386814a810",
-      ],
+      accounts: ["process.env.privateKey"],
     },
   },
 
