@@ -11,14 +11,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.2",
-    "@nomiclabs/hardhat-etherscan": "^3.1.6",
-    "hardhat": "^2.12.7"
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
+    "@nomiclabs/hardhat-etherscan": "^3.1.6"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "@nomiclabs/hardhat-ethers": "^2.2.2",
+    "chai": "^4.3.7",
     "eslint": "^8.35.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",
+    "ethers": "^5.0.0",
+    "hardhat": "^2.8.0",
     "prettier": "^2.8.4"
   }
 }

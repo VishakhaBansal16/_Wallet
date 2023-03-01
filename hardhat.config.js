@@ -1,4 +1,6 @@
+require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-ethers");
+require("@nomicfoundation/hardhat-chai-matchers");
 module.exports = {
   defaultNetwork: "goerli",
   networks: {
