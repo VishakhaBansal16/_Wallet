@@ -29,7 +29,7 @@ export const registerUser = async (req, res, next) => {
     if (oldUser) {
       return res.status(409).json({
         status: "failed",
-        message: "All inputs are required",
+        message: "Already registered",
       });
     }
 
